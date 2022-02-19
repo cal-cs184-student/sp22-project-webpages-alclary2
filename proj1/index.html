@@ -1,7 +1,111 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 1 here
-	</body>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Rasterizer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+<h1 align="middle">Project 1: Rasterizer</h1>
+<h2 align="middle">Anna Clary</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
+
+<h2 align="middle">Section I: Rasterization</h2>
+
+<h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+<p>This part really focused on the completion of the function rasterize_triangle() which takes in 3 points and in turn writes a triangle onto the sample_framebuffer.  To start I knew that I was going to have to use some type of 
+  “inside” or “point inside triangle” helper function and ended up structuring it where my helper function creates the line equation and returns a comparison value.
+</p>
+<p>Looking back it might have been nice to have it take in all the points and output 1 if the point should be filled and 0 if not. This small change would have transferred the three lines of finding 
+  each comp-value to the helper function resulting in a cleaner main code function, especially in later parts. 
+</p>
+<p>Focusing back, the next task was to find the proper bounding box so as to not check every pixel of the whole frame.  My bounding box was then defined by the points (minx, miny), (maxx, maxy), (minx, maxy), (maxx, miny). This 
+  translated into two for loops where the outer one goes from the min-y value to the max-y and the inner does the same but with the x-values. Within the interior of both of these for loops line equation comp-values are found using 
+  my defined helper function, one comp-value for each of the 3 sides of the triangle, making sure to be passing in the point +0.5 to both the x an y value so the center of the pixel is being checked not just the flat coordinate. 
+  If the point was in the triangle it was then filled using fill_pixel().
+</p>
+<p>Originally I had issues with winding order as seen by the half colored test6.svg file. To fix this I had to remember that to fill the pixel there were two options not just a singular comparison statement: one if all are greater 
+  than or equal to 0 OR if all of them were less than or equal to 0. 
+</p>
+
+<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+      <td>
+        <img src="images/image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+      <td>
+        <img src="images/image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+
+
+
+<h3 align="middle">Part 3: Transforms</h3>
+
+
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 4: Barycentric coordinates</h3>
+
+
+<h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+
+
+<h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+
+
+
+<h2 align="middle">Section III: Art Competition</h2>
+<p>If you are not participating in the optional art competition, don't worry about this section!</p>
+
+<h3 align="middle">Part 7: Draw something interesting!</h3>
+
+</body>
 </html>
