@@ -35,15 +35,16 @@
 <h2 align="middle">Overview</h2>
 <p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
 
+
 <h2 align="middle">Section I: Rasterization</h2>
 
 <h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
 <p>This part really focused on the completion of the function rasterize_triangle() which takes in 3 points and in turn writes a triangle onto the sample_framebuffer.  To start I knew that I was going to have to use some type of 
   “inside” or “point inside triangle” helper function and ended up structuring it where my helper function creates the line equation and returns a comparison value.
 </p>
-<p>Looking back it might have been nice to have it take in all the points and output 1 if the point should be filled and 0 if not. This small change would have transferred the three lines of finding 
+  <p>Looking back it might have been nice to have it take in all the points and output 1 if the point should be filled and 0 if not. This small change would have transferred the three lines of finding 
   each comp-value to the helper function resulting in a cleaner main code function, especially in later parts. 
-</p>
+  </p>
 <p>Focusing back, the next task was to find the proper bounding box so as to not check every pixel of the whole frame.  My bounding box was then defined by the points (minx, miny), (maxx, maxy), (minx, maxy), (maxx, miny). This 
   translated into two for loops where the outer one goes from the min-y value to the max-y and the inner does the same but with the x-values. Within the interior of both of these for loops line equation comp-values are found using 
   my defined helper function, one comp-value for each of the 3 sides of the triangle, making sure to be passing in the point +0.5 to both the x an y value so the center of the pixel is being checked not just the flat coordinate. 
@@ -52,60 +53,187 @@
 <p>Originally I had issues with winding order as seen by the half colored test6.svg file. To fix this I had to remember that to fill the pixel there were two options not just a singular comparison statement: one if all are greater 
   than or equal to 0 OR if all of them were less than or equal to 0. 
 </p>
+<div align="middle">
+  <img src="images.proj1/task1_writeup.png" align="middle" width="400px"/>
+  <figcaption align="middle">Here is an example of a completed image that uses the above work.</figcaption>
+</div>
 
-<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+<br><br>
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+
+<p>This one was a little rough for me in terms of debugging and figuring out some random stuff. My initial struggle wasn’t so much with the idea of supersampling but rather how to properly integrate it into the framework that was already set up. 
+  The spec gave me a pretty good indication of the functions that I would need to change in order to properly implement everything, so before I changed anything I worked towards understanding how the functions worked together.
+</p>
+<p>I first altered fill_pixel() so that it took into account the sqrt(sample_rate) as a  part of the side length of the buffer. Aka making sure it was indexing into the proper part of my sample buffer for whatever x and y I passed in. I thought 
+  this would be a good starting point as it was enough implementation that let me know if I passed a coordinate into fill_pixel() that It would be filling in the value of the sample buffer array, thinking about it as an array representing a matrix 
+  in row major form. 
+</p>
+<p>I then went to work setting up the rasterize_triangle() function to account for supersampling. I used my original code from part 1 simply adding in two more interior for loops that will each run for the sqrt(sample_rate). Within the interior the 
+  offset is calculated to take into account the current overarching pixel (x,y) as well as the subpixel number (j, i). This offset is added to the overarching subpixel coord to return the values to test for the line comparison functions. The pixel is 
+  then filled at the subpixel cord position.
+</p>
+<p>The next large function to change was the resolve_to_framebuffer(). This function mirrored the set of 4 for loops I created in the rasterize_triangle() function. However instead of testing the sub-pixel point the very  interior code adds the color 
+  of the subpixels associated to the singular original pixel, then after all the subpixel colors are added and before the two outermost loops change to the next original pixel. The collective color is divided by the sample_rate  to average it and placed 
+  in the proper areas of the rgb_framebuffer_target. Any other changes that were made related to making sure the framebuffer indexing took into account the sqrt(sample_size), as well as altering rasterize_point() to fill all the subpixels associated with 
+  the point with the corresponding color not just the singular point.
+</p>
+<p>The large issue I ended up running into after my implementation was indexing out of the array for large values. So anytime I would try to zoom in my program would completely shut down. This was solved by changing the inequalities in my for loops in my 
+  rasterize_triangle() function to not include equalities. 
+</p>
 
 <div align="middle">
   <table style="width=100%">
     <tr>
       <td>
-        <img src="images/image1.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
+        <img src="images.proj1/task2_writeup_pic.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampling Rate: 1 pixels.</figcaption>
       </td>
       <td>
-        <img src="images/image2.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
+        <img src="images.proj1/task2_writeup_pic4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampling Rate: 4 pixels.</figcaption>
       </td>
     </tr>
     <br>
     <tr>
       <td>
-        <img src="images/image3.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
+        <img src="images.proj1/task2_writeup_pic9.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampling Rate: 9 pixels.</figcaption>
       </td>
       <td>
-        <img src="images/image4.png" align="middle" width="400px"/>
-        <figcaption align="middle">Caption goes here.</figcaption>
+        <img src="images.proj1/task2_writeup_pic16.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampling Rate: 16 pixels.</figcaption>
       </td>
     </tr>
   </table>
 </div>
 
+<p>As you can tell from above, supersampling helps to not fully remove artifacts however to create a blurring effect that from the full view of the image looks as if those artifacts no longer exist.  The “blur” is created by the averaged pixels that are a less opaque, 
+lighter form of the original color. 
+</p>
 
-<h3 align="middle">Part 2: Antialiasing triangles</h3>
-
-
-
+<br><br>
 <h3 align="middle">Part 3: Transforms</h3>
+<p>I edited the transforms, and here is my lil robot! :)</p>
+<div align="middle">
+  <img src="images.proj1/my_robot.png" align="center" width="400px"/>
+  <figcaption align="middle">he's in the middle of a lil dance</figcaption>
+</div>
 
-
-
+<br><br>
+<br><br>
 <h2 align="middle">Section II: Sampling</h2>
 
 <h3 align="middle">Part 4: Barycentric coordinates</h3>
+<p>Barycentric coordinates are a way in which one can calculate a given attribute of a point based upon its position from the vertices of the triangle it sits inside. It’s attribute is then calculated as a weight sum of each of the vertices corresponding to its relative 
+  position to each.
+</p>
+<p>Below is a simple example where the attribute we are working with is color. Each of the three vertices of the triangle is assigned a corresponding color: red, blue, or green. For any point inside the triangle its given color can be calculated as a sum of the three colors 
+  of the vertices based upon its position. The weights for each of the vertex colors: alpha, beta, and gamma are calculated using line equations as well as the constraint that alpha, beta, and gamma must sum to 1.
+</p>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images.proj1/task4_tri.png" align="middle" width="400px"/>
+        <figcaption align="middle">Simple triangle example</figcaption>
+      </td>
+      <td>
+        <img src="images.proj1/task4_circle.png" align="middle" width="400px"/>
+        <figcaption align="middle">Color wheel representation</figcaption>
+      </td>
+    </tr>
+    </table>
+</div>
 
+<br><br>
 
 <h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+<p>Pixel sampling in the texture sense centers on taking a point in a triangle determining its attribute and then being able to then map that coordinate into the uv space of the texture. Barycentric coordinates are a vital part of this process. Like previously implemented 
+  sections we first have to determine if the pixel is within the triangle, if it is the corresponding barycentric coordinates are determined as done in task 4. Where it differs is, these coordinates are then used to determine the corresponding uv point in the texture 
+  space scaled using the width and height. The texture color is then found using one of the two sampling methods described below. 
+</p>
+<p>Nearest Sampling: This method takes in the uv coordinate and simply finds the closest pixel point returning it’s color value. In my code this was done simply using the inherent round function. </p>
+<p>Bilinear Sampling: This one is a little more tricky. Using the four nearest pixel coordinates to the uv point to create a weighted average. It’s done using two horizontal linear interpolations and one vertical to output a move averaged out color. </p>
+<p>Below are four pictures, showing the two different methods with no supersampling and with a sampling rate of 16 pixels. </p>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images.proj1/task5_bi_1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Bilinear Sampling at a rate of 1.</figcaption>
+      </td>
+      <td>
+        <img src="images.proj1/task5_bi_16.png" align="middle" width="400px"/>
+        <figcaption align="middle">Bilinear Sampling at a rate of 16.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images.proj1/task5_near_1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Nearest Sampling at a rate of 1.</figcaption>
+      </td>
+      <td>
+        <img src="images.proj1/task5_near_16.png" align="middle" width="400px"/>
+        <figcaption align="middle">Nearest Sampling at a rate of 16.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+<p>It can be hard to see the difference when simply looking at the four photos, however zooming in on areas where the colors next to each other are high contrast and constantly changing illuminates the benefits of bilinear versus nearest sampling. The 
+  area of where the trees meet the sky is one where lots of color are interacting and changing from pixel to pixel. In the nearest sampling method the colors of the trees look blocky and harsh even in the supersampled one. The bilinear sampling on the 
+  other hand produces a more blended and natural looking change without flattening out the contrast. Overall the bilinear sampling produces a more even, less blocky product in these types of areas. 
+</p>
 
+<br><br>
 
 <h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+<p>For level sampling mipmaps are used for a texture! The level of mipmap is chosen based on the deemed level of detail that would work best for the color of the pixel sample. The goal is to choose the level of mipmap that matches the screen sampling rate 
+  best. The larger the level of the mipmap the less detailed the resolution with zero being full resolution. To determine the appropriate level, there are three methods as described below.  The last two of the methods both use a formula outlined in lecture 
+  to compute a mipmap level that utilizes the distance between the sample and the other uv-points.
+</p>
+<p>L_ZERO: Simply sampling from the zero mipmap.</p>
+<p>L_NEAREST: Rounding the found level to simply find the closet mipmap to the calculation.</p>
+<p>L_LINEAR:  Finds the corresponding color of the uv-point at the two closest mipmaps to the calculated level. Returns a linear interpolation between these two found colors using the distance between the calculated level and the used levels.</p>
+<p>In terms of implementation, almost all was done in the texture.cpp file. The only thing calculated outside that was knew were the barycentric coordinates for ((x+1),y) and (x, (y+1)) that were used to find the p_dx_uv p_dy_uv that was passed into the 
+  SampleParams struct. Everything else was calculated in sample() or get_level().
+</p>
 
-
-
-<h2 align="middle">Section III: Art Competition</h2>
-<p>If you are not participating in the optional art competition, don't worry about this section!</p>
-
-<h3 align="middle">Part 7: Draw something interesting!</h3>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images.proj1/task6_L0PN.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_ZERO + P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images.proj1/taks6_L0PL.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_ZER0 + P_LINEAR</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images.proj1/task6_LNPN.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_NEAREST + P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images.proj1/taks6_LNPL.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_NEAREST + P_LINEAR</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+<p> Above is a series of photos that illustrate some of the different combinations. It’s easy to see the weird gradient created by L_NEAREST + P_LINEAR and to write it off as a bad option. However when you look at the overall photo in comparison to the 
+  others it looks just as good. That's a little counter intuitive. In this case the highest resolution is not always best! When you have a picture that is super small, sampling it at the greatest resolution ever possible may end up distorting the image 
+  as you try to cram all the details into a small space. In those moments having an image with a lower resolution texture map will actually allow for it to be a viable representation of what you want people to see.
+</p>
+<p>At this point there are so many features implemented that the question comes back to functionality. Anything using level sampling is gonna need more memory as you need space to hold the mipmaps. The worst of the bunch in terms of memory access, and 
+  speed would be bilinear pixel sampling with L_LINEAR level sampling. This combination means that on each call to the two closest mipmaps bilinear pixel sampling is used meaning more memory access than any of the others. However with this comes amazing 
+  and dynamic anti-aliasing capabilities. On the other hand, nearest pixel sampling with no level sampling will be the fastest method with the least amount of memory used, however it often produces subpar images with a good number of artifacts. Supersampling 
+  can do a lot in terms of anti-aliasing capabilities but level sampling is truly amazing in being able to dynamically change with zooms in and out to make sure your image is being shown in a way that captures it in the best possible resolution. 
+</p>
 
 </body>
 </html>
