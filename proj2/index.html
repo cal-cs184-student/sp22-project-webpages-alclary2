@@ -123,15 +123,15 @@
   <br><br>
 
   <h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
-  <p>De Casteljau is a method for subdivision that in this section I applied to Bezier Curves. A Bezier Curve is a parametric curve often 
-    used in computer graphics that is a great tool for modeling a fluid stroke. A common application is typography, Bezier Curves are 
-    defined by a collection of control points that model a continuous curve. To perform the evaluation of the curve de Casteljau’s algorithm 
-    for subdivision linearly interpolates, using the ratios t and (1-t), between each pair of adjacent vertices creating new control points 
-    along each edge. This process is then done recursively until a single point along the curve is found. 
+  <p>Bezier Surfaces rendered using de Casteljau is an extension of the evaluation of a Bezier Curve only in a 3D sense. To complete this evaluation 
+    on a given BazierPatch is to focus on one direction and then the other. What that means is that given the vector of vectors of 3D point vectors 
+    one should first linearly interpolate in the row direction, using u, until a single point has been returned for each row. Then linearly interpolate 
+    said singular row points in the vertical direction, using v, into a sole point that is then returned.  
   </p>
-  <p> Within the code I filled in evaluateStep() which completes one recursive call, aka finds the next set of control points from the inputted 
-    ones. To complete, I first check that the inputted point list is not just a singular point. If it is, I simply return the point. If not I 
-    perform linear interpolation on each pair of adjacent vertices outputting a vector of these newly found points. 
+  <p> To complete the above I filled out the evalutateStep(), evaluate1D(), and evaluate() functions. The evaluateStep() is very similar to the one in 
+    the part above, simply modified for a vector of 3D points. The function evaluates the given vector of points at one step. The evaluate1D() is used 
+    to fully evaluate to a single point a given vector of control points. Lastly evaluate() uses evaluate1D() to fully evaluate each vector within, using 
+    u, to singular points for each. Then it interpolates those points to the final point, using v, that is returned. 
   </p>
 
 	<div align="middle">
