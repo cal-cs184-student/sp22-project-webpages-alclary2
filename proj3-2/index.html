@@ -1,7 +1,229 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <style>
+    body {
+      padding: 100px;
+      width: 1000px;
+      margin: auto;
+      text-align: left;
+      font-weight: 300;
+      font-family: 'Open Sans', sans-serif;
+      color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style>
+  <title>CS 184 Pathtracer</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+  <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+  <h1 align="middle">Project 3-2: Pathtracer 2</h1>
+  <h2 align="middle">Anna Clary</h2>
+
+  <br><br>
+
+<h2 align="middle">Overview</h2>
+  <p> This project built upon the previous project, 3-1, by adding some fun new features. For my two parts I
+	   completed part 1 and part 4. Part 1 focused on rendering mirrored and glass type objects. It was really 
+	   interesting doing the different max_ray_depths to really visualize the different bounces of light and how 
+	   they change the scene. Part 4 changed the camera model from pinhole to thin-lens, which helped to render more 
+	   realistic scenes with different levels of focus. Similar to how a human eye or something like portrait mode 
+	   blurs out portions of the scene. I really enjoyed completing this project and I wish I would have had time 
+	   to complete all the parts, however I really like the ones I ended up choosing. 
+  </p>
+  
+<br><br>
+
+<h2 align="middle">Part I: Mirror and Glass Materials </h2>
+
+<h3>Renderings at Different max_ray_depth Values: </h3>
+<div align="middle">
+	<table style="width=100%">
+	  <tr>
+		<td>
+		  <img src="images/part 1/sphere0.png" align="middle" width="450px" />
+		  <figcaption align="middle">Image A: max_ray_depth = 0</figcaption>
+		</td>
+		<td>
+		  <img src="images/part 1/sphere1.128.png" align="middle" width="450px" />
+		  <figcaption align="middle">Image B: max_ray_depth = 1</figcaption>
+		</td>
+	  </tr>
+	  <br>
+	  <tr>
+		<td>
+		  <img src="images/part 1/sphere2.128.png" align="middle" width="450px" />
+		  <figcaption align="middle">Image C: max_ray_depth = 2</figcaption>
+		</td>
+		<td>
+		  <img src="images/part 1/sphere3.128.png" align="middle" width="450px" />
+		  <figcaption align="middle">Image D: max_ray_depth = 3</figcaption>
+		</td>
+	  </tr>
+	</table>
+</div>
+<div align="middle">
+	<table style="width=100%">
+	  <tr>
+		<td>
+		  <img src="images/part 1/sphere4.128.png" align="middle" width="450px" />
+		  <figcaption align="middle">Image E: max_ray_depth = 4</figcaption>
+		</td>
+		<td>
+		  <img src="images/part 1/sphere5.128.png" align="middle" width="450px" />
+		  <figcaption align="middle">Image F: max_ray_depth = 5</figcaption>
+		</td>
+	  </tr>
+	  <br>
+	  <tr>
+		<td>
+		  <img src="images/part 1/sphere100.128.png" align="middle" width="450px" />
+		  <figcaption align="middle">Image G: max_ray_depth = 100</figcaption>
+		</td>
+	  </tr>
+	</table>
+</div>
+<h3>Breakdown of the Bounces on Above Images</h3>
+<ul>
+	<li>A: only areas that emit light themselves aka the ceiling light source, can be seen</li>
+	<li>B: Direct illumination can now be seen, including the highlights on the tops of both of the spheres</li>
+	<li>C: The mirror ball on the left is now reflecting light through indirect illumination. It is not fully rendered 
+		correctly yet seeing as the ceiling in the reflection is black and not like the white rendered one in the image. 
+		So an extra bounce is needed to fully render the details of the box in the mirrored reflection. Similarly for the 
+		glass ball on the right you can see the reflecting light portions minus some box details. However the majority of 
+		it remains black as the refracted light needs another bounce in order to exit the ball.
+	</li>
+	<li>D: The mirror ball now has the ceiling rendered correctly, however the reflection of the glass ball in it remains black 
+		as the glass ball was before. The glass ball officially looks like glass now!! The light refracted under the glass ball 
+		can now be seen as well, showing that this (3rd) bounce meant that light was able to properly exit.
+	</li>
+	<li>E: The mirror ball looks how you would expect now, with the glass ball reflecting properly. Looking just at the mirror ball 
+		in the remaining images you will see very little change. In terms of the glass ball it is brighter as more bounces are occurring. 
+		There is now a light spot on the wall as the light is reflected from the mirror ball, refracted within the glass ball and then hits 
+		the wall. This new bounce also results in light being reflected onto the bottom of the glass ball from the refracted light underneath.
+	</li>
+	<li>F: Nothing major changes. Things seem to have settled.</li>
+	<li>G: No discernible changes from the previous image. Seems a bit noisier as more reflections and refractions are occuring. </li>
+</ul>
+<br><br>
+
+
+<h3>Debug:</h3>
+<p>This one gave me a bit of a headache. I was having an issue where after part 3 none of my refracted light was being rendered.
+	So the sphere on the right was showing up completely black. Turns out I had parentheses around something in my inner square 
+	root function that I shouldn't have. So it was giving me very wrong values.
+</p>
+
+<br><br>
+<br><br>
+
+<h2 align="middle">Part II: Microfacet Material </h2>
+<p>Not one of my chosen parts.</p>
+<br><br>
+<br><br>
+
+<h2 align="middle">Part III: Environment Light</h2>
+<p>Not one of my chosen parts.</p>
+
+<br><br>
+<br><br>
+
+
+<h2 align="middle">Part IV: Depth of Field</h2>
+<h3>Pinhole vs. Thin-lens Camera Model:</h3>
+<p>The “pinhole” camera model is one that works on the assumption that everything 
+	within the frame is in focus no matter the distance. So far this is the model that 
+	has been used to create all our images, however it is not necessarily the most 
+	accurate to cameras or the human eye. In comes the “thin-lens” camera model. This 
+	particular model renders parts of the images in focus and other out of focus dependent 
+	on the lens size (aperture) and focal distance. Code wise this model differs in that 
+	instead of simply tracing a ray straight through a “pinhole”, the ray is traced but 
+	the direction is changed after passing through the lens.
+</p>
+
+<br><br>
+<p>Note: I tried to create some more interesting angles to really show this off, but I kept 
+	getting tripped up with the camera.txt files and my computer just could not handle doing 
+	it via the gui so this is what I ended up with. I still think it does a really good job 
+	of showing the changes :) just not quite as fun as I was hoping. 
+</p>
+
+<h3>Focus Stack:</h3>
+<p>As the focus depth is increase you can see how the areas in focus move from the front of the dragon 
+	around the mouth, along the dragon's body, and  ultimately in the last image to solely the back corner.
+</p>
+<div align="middle">
+	<table style="width=100%">
+	  <tr>
+		<td>
+		  <img src="images/part 4/dragon44.png" align="middle" width="450px" />
+		  <figcaption align="middle">Focus depth: 4.2	Aperture radius: 0.1</figcaption>
+		</td>
+		<td>
+		  <img src="images/part 4/dragon48.png" align="middle" width="450px" />
+		  <figcaption align="middle">Focus depth: 4.8	Aperture radius: 0.1</figcaption>
+		</td>
+	  </tr>
+	  <br>
+	  <tr>
+		<td>
+		  <img src="images/part 4/dragon54.png" align="middle" width="450px" />
+		  <figcaption align="middle">Focus depth: 5.4	Aperture radius: 0.1</figcaption>
+		</td>
+		<td>
+		  <img src="images/part 4/dragon56.png" align="middle" width="450px" />
+		  <figcaption align="middle">Focus depth: 5.6	Aperture radius: 0.1</figcaption>
+		</td>
+	  </tr>
+	</table>
+</div>
+
+<br><br>
+
+<h3>Aperture Size Change:</h3>
+<p>As the aperture size increases (with the focus depth the same) the blurriness of the images increases, making 
+	the in-focus areas of the dragon's front stand out much more.
+</p>
+<div align="middle">
+	<table style="width=100%">
+	  <tr>
+		<td>
+		  <img src="images/part 4/dragon.0.png" align="middle" width="450px" />
+		  <figcaption align="middle">Aperture radius: 0.05	Focus depth: 4.5 </figcaption>
+		</td>
+		<td>
+		  <img src="images/part 4/dragon.25.png" align="middle" width="450px" />
+		  <figcaption align="middle">Aperture radius: 0.25	Focus depth: 4.5</figcaption>
+		</td>
+	  </tr>
+	  <br>
+	  <tr>
+		<td>
+		  <img src="images/part 4/dragon.5.png" align="middle" width="450px" />
+		  <figcaption align="middle">Aperture radius: 0.5	Focus depth: 4.5</figcaption>
+		</td>
+		<td>
+		  <img src="images/part 4/dragon.2.png" align="middle" width="450px" />
+		  <figcaption align="middle">Aperture radius: 1.0	Focus depth: 4.5</figcaption>
+		</td>
+	  </tr>
+	</table>
+</div>
+<h3>Debug:</h3>
+<p>The debug for this part wasn't too bad, most of my errors originally came from me copying my code from
+	project 3-1 and not properly editing out portions I did not need.
+</p>
+</body>
 </html>
