@@ -1,7 +1,561 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 4 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <style>
+    body {
+      padding: 100px;
+      width: 1000px;
+      margin: auto;
+      text-align: left;
+      font-weight: 300;
+      font-family: 'Open Sans', sans-serif;
+      color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style>
+  <title>CS 184 Pathtracer</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+	<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+	<h1 align="middle">Project 4: Cloth Sim</h1>
+	<h2 align="middle">Anna Clary</h2>
+
+  	<br><br>
+
+  	<h2 align="middle">Overview</h2>
+  		<p> I say this about every project, but this one was a journey. To start off part 1
+			   created the model of the cloth that would be used for every subsequent section. 
+			   This was done by creating a grid of masses and springs with certain constraints 
+			   to model the fabric. Part 2 was force focused. External forces and spring correction forces were implemented 
+			   and Verlet ingration was used to caculate new vertex positions. Coming together to give the fabric realistic properties when hanging 
+			   or falling. Up next was the cloth’s interactions with objects. In particular a 
+			   sphere and a plane. These collision models were implemented in part 3 resulting 
+			   in the cloth being able to lie on a plane and over a sphere. In part 4 self 
+			   collisions were handled, producing a simulation that allowed the fabric to not 
+			   only drape over objects but fold in on itself as well. Lastly the world of 
+			   shaders was explored. Part 5 marked the implementation of diffusion, 
+			   Blinn-Phong, texture, bump/displacement, and mirror shaders. 
+			   I struggled initially with learning the properties of the vert and 
+			   frag files and spent lots of time debugging my Blinn-Phong shader. 
+			   However the shaders created some really cool effects that produced my 
+			   favorite simulations in the whole project.
+			</p>
+  
+	<br><br>
+	<h2 align="middle">Section I: Masses and Springs </h2>
+		<p>Following the spec I built a grid of masses and springs using the 
+			constraints laid out. This was done to create a representation of 
+			the cloth which would be a key piece in the rest of the renderings. 
+			To complete this process the masses were added to the grid first in an 
+			evenly spaced manner. Next the masses were pinned if they were found within 
+			the cloth’s pinned vector. Lastly the springs were added and labeled according
+			to the structural, shearing, and bending constraints outlined within the spec.
+			Below are a few images illustrating the resulting grid. 
+		</p>
+		<div align="middle">
+			<table style="width=100%">
+			  <tr>
+				<td>
+					  <img src="images/part 1/part1.all.png" align="middle" width="500px" />
+					  <figcaption align="middle">structural, shearing, and bending</figcaption>
+				</td>
+				<td>
+					  <img src="images/part 1/part1.allclose.png" align="middle" width="500px" />
+					  <figcaption align="middle">structural, shearing, and bending (close up)</figcaption>
+				</td>
+			  </tr>
+			  <br>
+			  <tr>
+				<td>
+					  <img src="images/part 1/part1.structbend.png" align="middle" width="500px" />
+					  <figcaption align="middle">structural and bending</figcaption>
+				</td>
+				<td>
+					  <img src="images/part 1/part1.structbendclose.png" align="middle" width="500px" />
+					  <figcaption align="middle">structural and bending (close up)</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+					  <img src="images/part 1/part1.shear.png" align="middle" width="500px" />
+					  <figcaption align="middle">shearing only</figcaption>
+				</td>
+				<td>
+					  <img src="images/part 1/part1.shearclose.png" align="middle" width="500px" />
+					  <figcaption align="middle">shearing only (close up)</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<h3>Debug:</h3>
+		<p>Nothing too big in terms of debugging. Made a few mistakes where I put a "1" instead of a "2" or a "-" 
+			instead of a "+". But all were easliy fixed!</p>
+
+	<br><br>
+	<br><br>
+
+	<h2 align="middle">Section II: Simulation via Numerical Integration</h2>
+		<h3>Default:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part2/part2.resting.png" align="middle" width="500px" />
+		  			<figcaption align="middle">default resting view 1</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part2/part2.resting2.png" align="middle" width="500px" />
+		  			<figcaption align="middle">defualt resting view 2</figcaption>
+				</td>
+	  		</tr>
+			</table>
+		</div>
+		<h3>Playing with ks:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part2/part2.highks2.png" align="middle" width="500px" />
+		  			<figcaption align="middle">high ks view 1</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part2/part2.lowks.png" align="middle" width="500px" />
+		  			<figcaption align="middle">low ks view 1</figcaption>
+				</td>
+	  		</tr>
+			<tr>
+				<td>
+		  			<img src="images/part2/part2.highks.png" align="middle" width="500px" />
+		  			<figcaption align="middle">high ks view 2</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part2/part2.lowks2.png" align="middle" width="500px" />
+		  			<figcaption align="middle">low ks view 2</figcaption>
+				</td>
+	  		</tr>
+			</table>
+		</div>
+		<p>Change?</p>
+		<p>By playing around with the ks it becomes easy to see that changing the value has an impact 
+			on the elasticity. The larger the ks value the more stiff the cloth behaves. The smaller 
+			the ks value the more loose and elastic it moves. This would make sense as ks interacts with 
+			the spring constant. 
+		</p>
+		<br><br>
+		<h3>Playing with density:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part2/part2.highd.png" align="middle" width="500px" />
+		  			<figcaption align="middle">high density view 1</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part2/part2.lowd.png" align="middle" width="500px" />
+		  			<figcaption align="middle">low density view 1</figcaption>
+				</td>
+	  		</tr>
+			<tr>
+				<td>
+		  			<img src="images/part2/part2.highd2.png" align="middle" width="500px" />
+		  			<figcaption align="middle">high density view 2</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part2/part2.lowd2.png" align="middle" width="500px" />
+		  			<figcaption align="middle">low density view 2</figcaption>
+				</td>
+	  		</tr>
+			</table>
+		</div>
+		<p>Change?</p>
+		<p>The main effect with density is gravity. The higher the density to more weighty the 
+			fabric seems pulling down and drooping more than with a low density. With a low 
+			density the fabric barely sinks especially in relation to the higher density.  
+		</p>
+		<br><br>
+		<h3>Playing with damping:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part2/part2.highdamp.png" align="middle" width="500px" />
+		  			<figcaption align="middle">high damping</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part2/part2.lowdamp2.png" align="middle" width="500px" />
+		  			<figcaption align="middle">low damping</figcaption>
+				</td>
+	  		</tr>			  
+			</table>
+		</div>
+		<p>Change?</p>
+		<p>This one is really fun! The lower the damping the more jittery and bouncy the fabric. 
+			At low damping levels the fabric bounces and vibrates much more and for much longer as 
+			less energy is lost. In comparison with a high damping the fabric falls slower and does 
+			not bounce back up or jitter.
+		</p>
+		<h3>Debug:</h3>
+		<p>Nothing too bad on the debug for this one!</p>
+
+	<br><br>
+	<br><br>
+
+
+	<h2 align="middle">Section III: Handling Collisions With Other Objects</h2>
+	<p>In this section we upgrade our model to be able to interact with planes and spheres. As a result of handling the collisions with
+		other objects, or cloth can drape over a sphere and rest on a plane.
+	</p>
+
+		<h3>Change in ks:</h3>
+		<div align="middle">
+			<table style="width=100%">
+			  <tr>
+				<td>
+					  <img src="images/part3/task3.ks500.png" align="middle" width="500px" />
+					  <figcaption align="middle">ks = 500</figcaption>
+				</td>
+				<td>
+					  <img src="images/part3/task3.ks5000.png" align="middle" width="500px" />
+					  <figcaption align="middle">ks = 5000</figcaption>
+				</td>
+			  </tr>
+			  <br>
+			  <tr>
+				<td>
+					  <img src="images/part3/task3.ks50000.png" align="middle" width="500px" />
+					  <figcaption align="middle">ks = 50000</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+		<p>As you can see in the images above the higher the ks value the stiffer the material becomes. 
+			This idea was first explored in the section above and can be seen here as well. When ks=500 
+			the material is much more droopy, hanging over the sphere with many folds near the bottom and hugging 
+			the top/middle section closely. However at ks=50000 the material is much stiffer not 
+			hugging the sphere as closely and producing less draping.
+		</p>
+
+		<div align="middle">
+			<table style="width=100%">
+			  <tr>
+				<td>
+					  <img src="images/part3/part3.funtextplane.png" align="middle" width="500px" />
+					  <figcaption align="middle">cloth on plane (custom texture)</figcaption>
+				</td>
+				<td>
+					  <img src="images/part3/task3.planewire.png" align="middle" width="500px" />
+					  <figcaption align="middle">cloth on plane (wireframe)</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+	<br><br>
+	<br><br>
+
+	<h2 align="middle">Section IV: Handling Self-Collisions</h2>
+	<p>Below is a series of images taken at increasing timesteps and a few different angles to illustrate
+		how the fabric can now fold in on itslef without producing a clipping effect.
+	</p>
+		<h3>Cloth Folding Onto Itself:</h3>
+		<div align="middle">
+			<table style="width=100%">
+		  	<tr>
+				<td>
+				  	<img src="images/part4/part4.fold3.png" align="middle" width="500px" />
+				  	<figcaption align="middle"></figcaption>
+				</td>
+				<td>
+				  	<img src="images/part4/part4.fold7.png" align="middle" width="500px" />
+				  	<figcaption align="middle"></figcaption>
+				</td>
+		  	</tr>
+			<tr>
+				<td>
+				  	<img src="images/part4/part4.fold10.png" align="middle" width="500px" />
+				  	<figcaption align="middle"></figcaption>
+				</td>
+				<td>
+				  	<img src="images/part4/part4.fold13.png" align="middle" width="500px" />
+				  	<figcaption align="middle"></figcaption>
+				</td>
+		  	</tr>
+			</table>
+		</div>
+		<h3>Change in Density:</h3>
+		<p>The higher the density the more the fabric folds in on itself. As the density is higher the greater 
+			the gravitational force felt, thus the fabric gets pulled in on itself creating more folds. The lower 
+			the density the less folds. At a low density value there is not as much of a gravitational impact thus as the fabric falls the 
+			folds become more spaced out. 
+		</p>
+		<div align="middle">
+			<table style="width=100%">
+		  	<tr>
+				<td>
+				  	<img src="images/part4/part4.lowden.png" align="middle" width="500px" />
+				  	<figcaption align="middle">low density midway</figcaption>
+				</td>
+				<td>
+				  	<img src="images/part4/part4.highden.png" align="middle" width="500px" />
+				  	<figcaption align="middle">high density midway</figcaption>
+				</td>
+		  	</tr>
+			<tr>
+				<td>
+				  	<img src="images/part4/part4.lowdenrest.png" align="middle" width="500px" />
+				  	<figcaption align="middle">low density after fall</figcaption>
+				</td>
+				<td>
+				  	<img src="images/part4/part4.highdenrest.png" align="middle" width="500px" />
+				  	<figcaption align="middle">high density after fall</figcaption>
+				</td>
+		  	</tr>
+			</table>
+		</div>
+
+		<h3>Change in ks:</h3>
+		<p>The higher the ks value the stiffer the fabric meaning as it falls less folds are produced. Looking at the series 
+			with the low ks value you can see how loose the fabric is and as a result how often it folds in on itself. 
+			Opposingly with the larger ks value the fabric is stiffer, so as it falls the folds are much 
+			larger and occur less frequently. 
+		</p>
+		<div align="middle">
+			<table style="width=100%">
+		  	<tr>
+				<td>
+				  	<img src="images/part4/part4.lowks.png" align="middle" width="500px" />
+				  	<figcaption align="middle">low ks midway</figcaption>
+				</td>
+				<td>
+				  	<img src="images/part4/part4.highks.png" align="middle" width="500px" />
+				  	<figcaption align="middle">high ks midway</figcaption>
+				</td>
+		  	</tr>
+			<tr>
+				<td>
+				  	<img src="images/part4/part4.lowksrest.png" align="middle" width="500px" />
+				  	<figcaption align="middle">low ks after fall</figcaption>
+				</td>
+				<td>
+				  	<img src="images/part4/part4.highksrest.png" align="middle" width="500px" />
+				  	<figcaption align="middle">high ks after fall</figcaption>
+				</td>
+		  	</tr>
+			</table>
+		</div>
+	<br><br>
+	<br><br>
+
+
+	<h2 align="middle">Section V: Shaders</h2>
+		<p>What is a shader program?</p>
+		<p>Shaders are a program that run in parallel with the GPU and perform transformations 
+			to inputs and outputs at different points in the graphics pipeline. They basically 
+			allow the user to take in an input and output a single 4D vector that details 
+			information about a vertex. The information produced often has to do with lighting 
+			or color effects, but in general it just tells the program how to render each pixel. 
+		</p>
+
+		<p>How do vertex and fragment shaders work together?</p>
+		<p>Vertex shaders are a part of earlier stages of the graphics pipeline. They apply 
+			transforms to vertices, meaning they allow users to change the position and normals 
+			of vertices. Fragment shaders are a part of the rasterization step of the pipeline. 
+			They take information from the vertex shaders that are attributes of the fragment and 
+			generate and out_color. Together the information from the vertex shader and then 
+			subsequent out_color from the fragment shader create the lighting and color effects.
+		</p>
+
+		<h3>Blinn-Phong Shader:</h3>
+		<p>The three key components in the Blinn-Phong Shading model are ambient, diffuse, and 
+			specular lighting. The key difference between the Phong Shading model and the 
+			Blinn-Phong Shading model is the specular lighting. Specular lighting are the 
+			really bright highlights seen in the images below. This type of lighting is found 
+			through the half vector which is halfway between the lighting vector and view vector. 
+			If you are looking at the equation in the spec the specular light is the last thing 
+			summed, while the ambient light is the first, and the diffuse lighting is the middle. 
+		</p>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.phongamball.png" align="middle" width="500px" />
+		  			<figcaption align="middle">ambient on sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.phongam.png" align="middle" width="500px" />
+		  			<figcaption align="middle">ambient on cloth</figcaption>
+				</td>
+	  		</tr>
+	  		<br>
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.phongdiffball.png" align="middle" width="500px" />
+		  			<figcaption align="middle">diffuse on sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.phongdiff.png" align="middle" width="500px" />
+		  			<figcaption align="middle">diffuse on cloth</figcaption>
+				</td>
+	  		</tr>
+			  <tr>
+				<td>
+		  			<img src="images/part5/part5.phongspecball.png" align="middle" width="500px" />
+		  			<figcaption align="middle">specular on sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.phongspec.png" align="middle" width="500px" />
+		  			<figcaption align="middle">specular on cloth</figcaption>
+				</td>
+	  		</tr>
+	  		<br>
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.phongallball.png" align="middle" width="500px" />
+		  			<figcaption align="middle">all on sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.phongall.png" align="middle" width="500px" />
+		  			<figcaption align="middle">all on cloth</figcaption>
+				</td>
+	  		</tr>
+			</table>
+		</div>
+
+		<h3>Texture Shader:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.mytext.png" align="middle" width="500px" />
+		  			<figcaption align="middle">my texture on sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.mytextcloth.png" align="middle" width="500px" />
+		  			<figcaption align="middle">my texture on cloth</figcaption>
+				</td>
+	  		</tr>
+	  		<br>
+			</table>
+		</div>
+		<h3>Bump Shader:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.bumpball.png" align="middle" width="500px" />
+		  			<figcaption align="middle">sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.bumpcloth.png" align="middle" width="500px" />
+		  			<figcaption align="middle">cloth</figcaption>
+				</td>
+	  		</tr>
+	  		<br>
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.bumptop.png" align="middle" width="500px" />
+		  			<figcaption align="middle">top</figcaption>
+				</td>
+	  		</tr>
+			</table>
+		</div>
+		<h3>Displacement Shader:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.dispball.png" align="middle" width="500px" />
+		  			<figcaption align="middle">sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.dispcloth.png" align="middle" width="500px" />
+		  			<figcaption align="middle">cloth</figcaption>
+				</td>
+	  		</tr>
+	  		<br>
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.disptop.png" align="middle" width="500px" />
+		  			<figcaption align="middle">top</figcaption>
+				</td>
+	  		</tr>
+			</table>
+		</div>
+		<h3>Bump vs Displacement:</h3>
+		<p>The two methods are extremely similar with the main difference being found in the 
+			change to the position vector. The displacement method modifies the vertex position 
+			by the equation given in the spec. This results in the textures seeming more raised 
+			and three dimensional, especially along the sides of the draping. The surface is 
+			actually changing thus, as we map a texture onto it it seems more realistically bumpy. 
+			On the other hand the bump shader maps these textures onto the surface and through 
+			the use of the Blinn-Phong model the shading accurately illustrates the texture. 
+			However the vertex positions don’t actually move with the texture as it only modifies 
+			the normals. While creating a believable image and a very fun one at that, the sphere 
+			and cloth still retain a smooth quality. 
+		</p>
+		<h3>Coarseness Change:</h3>
+		<p>The higher resolution has minimal effect on the bump shader, however looking along the 
+			edges you can see them smooth out a bit. This is to be expected as the vertices in the 
+			bump model are not modified thus having more would simply create a rounder shape. 
+			The bigger change is with the displacement shader. The increase in resolution produces 
+			more ridges and edges as there are more vertices to shift. This creates a more evenly 
+			textured sphere making it look a little less randomly lumpy and more of a direct 
+			representation of the texture. 
+		</p>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.bump16res.png" align="middle" width="500px" />
+		  			<figcaption align="middle">Bump a=16 o=16</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.disp16res.png" align="middle" width="500px" />
+		  			<figcaption align="middle">Displacement a=16 o=16</figcaption>
+				</td>
+	  		</tr>
+	  		<br>
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.bump128res.png" align="middle" width="500px" />
+		  			<figcaption align="middle">Bump a=128 o=128</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.disp128res.png" align="middle" width="500px" />
+		  			<figcaption align="middle">Displacement a=128 o=128
+					  </figcaption>
+				</td>
+	  		</tr>
+			</table>
+		</div>
+
+		<h3>Mirror Shader:</h3>
+		<div align="middle">
+			<table style="width=100%">
+	  		<tr>
+				<td>
+		  			<img src="images/part5/part5.mirrorball.png" align="middle" width="500px" />
+		  			<figcaption align="middle">Mirror on Sphere</figcaption>
+				</td>
+				<td>
+		  			<img src="images/part5/part5.mirror.png" align="middle" width="500px" />
+		  			<figcaption align="middle">Mirror on Cloth</figcaption>
+				</td>
+	  		</tr>
+	  		<br>
+			</table>
+		</div>
+</body>
 </html>
